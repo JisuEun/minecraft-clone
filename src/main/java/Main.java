@@ -22,6 +22,7 @@ import static org.lwjgl.system.MemoryUtil.NULL;
 
 public class Main {
     private long window; // 창을 나타내는 핸들. long 타입의 ID
+    private float lastFrame = 0.0f;
 
     Camera camera = new Camera();
 
@@ -74,6 +75,11 @@ public class Main {
         // OpenGL을 이 창에서 쓸 수 있게 지정
         glfwSwapInterval(1); // V-Sync 활성화 (화면 찢김 방지)
         glfwShowWindow(window); // 숨겨진 창을 보여줌
+
+        glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+        glfwSetCursorPosCallback(window, (w, xpos, ypos) -> {
+            camera.processMouseMovement((float)xpos, (float)ypos);
+        });
     }
 
     private void loop() {
@@ -171,6 +177,21 @@ public class Main {
         int textureID = TextureLoader.loadTexture("textures/dirt.png");
 
         while (!glfwWindowShouldClose(window)) { // 창을 닫지 않으면 계속 실행
+            float currentTime = (float)glfwGetTime();
+            float deltaTime = currentTime - lastFrame;
+            lastFrame = currentTime;
+
+            float speed = 2.5f * deltaTime;
+
+            if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+                camera.processKeyboard("FORWARD", speed);
+            if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+                camera.processKeyboard("BACKWARD", speed);
+            if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+                camera.processKeyboard("LEFT", speed);
+            if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+                camera.processKeyboard("RIGHT", speed);
+
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // 화면 초기화
             glClearColor(0.1f, 0.2f, 0.3f, 1.0f); // 배경색 파란색으로 설정
 
