@@ -16,6 +16,9 @@ out/
 !**/src/main/**/out/
 !**/src/test/**/out/
 
+### 1.21.5 ###
+1.21.5/
+
 ### Eclipse ###
 .apt_generated
 .classpath
