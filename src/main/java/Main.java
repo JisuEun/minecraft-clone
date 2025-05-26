@@ -2,6 +2,7 @@
 // opengl: 그래픽 렌더링
 // system: 메모리 관련 처리
 
+import org.joml.Matrix4f;
 import org.lwjgl.glfw.GLFWErrorCallback;
 import org.lwjgl.glfw.GLFWVidMode;
 import org.lwjgl.opengl.*;
@@ -21,6 +22,8 @@ import static org.lwjgl.system.MemoryUtil.NULL;
 
 public class Main {
     private long window; // 창을 나타내는 핸들. long 타입의 ID
+
+    Camera camera = new Camera();
 
     public void run() {
         System.out.println("Hello LWJGL!");
@@ -173,11 +176,25 @@ public class Main {
 
             glUseProgram(shaderProgram);
 
+            // MVP 행렬 매 프레임마다 계산
+            Matrix4f model = new Matrix4f().identity();
+            Matrix4f view = camera.getViewMatrix();
+            Matrix4f proj = camera.getProjectionMatrix(800f / 600f);
+
+            Matrix4f mvp = new Matrix4f();
+            proj.mul(view, mvp).mul(model);
+
+            int mvpLoc = glGetUniformLocation(shaderProgram, "mvp");
+            try (MemoryStack stack = stackPush()) {
+                glUniformMatrix4fv(mvpLoc, false, mvp.get(stack.mallocFloat(16)));
+            }
+
             // 텍스처 유니폼 위치 가져오기
             int uniformLocation = glGetUniformLocation(shaderProgram, "texture1");
             glUniform1i(uniformLocation, 0); // 텍스처 유니폼에 텍스처 유닛 0 연결
-
             glBindTexture(GL_TEXTURE_2D, textureID);
+
+            // 정점 그리기
             glBindVertexArray(vao);
             GL11.glDrawArrays(GL_TRIANGLES, 0, 36);
             glBindVertexArray(0);
