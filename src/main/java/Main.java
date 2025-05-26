@@ -12,6 +12,10 @@ import java.nio.IntBuffer; // 메모리 버퍼 (C 스타일 포인터)
 import static org.lwjgl.glfw.Callbacks.glfwFreeCallbacks;
 import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.opengl.GL11.*;
+import static org.lwjgl.opengl.GL15.glBindBuffer;
+import static org.lwjgl.opengl.GL15.glBufferData;
+import static org.lwjgl.opengl.GL20.*;
+import static org.lwjgl.opengl.GL30.glBindVertexArray;
 import static org.lwjgl.system.MemoryStack.stackPush;
 import static org.lwjgl.system.MemoryUtil.NULL;
 
@@ -72,26 +76,76 @@ public class Main {
     private void loop() {
         int shaderProgram;
 
-        // 정점 좌표 (삼각형)
+        glEnable(GL_DEPTH_TEST);
+
+        // 정점 좌표 (정육면체)
         float[] vertices = {
-                -0.5f, -0.5f, -0.5f,
-                0.5f, -0.5f, 0.0f,
-                0.0f, 0.5f, 0.0f
+                //positions(x,y,z좌표) //texCoords(텍스처 좌표)
+                // Back face
+                -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
+                0.5f, -0.5f, -0.5f,  1.0f, 0.0f,
+                0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+                0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+                -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
+                -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
+
+                // Front face
+                -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+                0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
+                0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
+                0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
+                -0.5f,  0.5f,  0.5f,  0.0f, 1.0f,
+                -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+
+                // Left face
+                -0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+                -0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+                -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+                -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+                -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+                -0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+
+                // Right face
+                0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+                0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+                0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+                0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+                0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+                0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+
+                // Bottom face
+                -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+                0.5f, -0.5f, -0.5f,  1.0f, 1.0f,
+                0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
+                0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
+                -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+                -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+
+                // Top face
+                -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
+                0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+                0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+                0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+                -0.5f,  0.5f,  0.5f,  0.0f, 0.0f,
+                -0.5f,  0.5f, -0.5f,  0.0f, 1.0f
         };
 
         // 버퍼 생성
         int vao = GL30.glGenVertexArrays();
         int vbo = GL15.glGenBuffers();
 
-        GL30.glBindVertexArray(vao);
-        GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, vbo);
-        GL15.glBufferData(GL15.GL_ARRAY_BUFFER, vertices, GL15.GL_STATIC_DRAW);
+        glBindVertexArray(vao);
+        glBindBuffer(GL15.GL_ARRAY_BUFFER, vbo);
+        glBufferData(GL15.GL_ARRAY_BUFFER, vertices, GL15.GL_STATIC_DRAW);
 
-        GL20.glVertexAttribPointer(0, 3, GL11.GL_FLOAT, false, 3 * Float.BYTES, 0);
+        // 위치
+        glVertexAttribPointer(0, 3, GL11.GL_FLOAT, false, 5 * Float.BYTES, 0);
+        glEnableVertexAttribArray(0);
 
-        GL20.glVertexAttribPointer(0, 3, GL_FLOAT, false, 3 * Float.BYTES, 0);
-        GL20.glEnableVertexAttribArray(0);
-        GL30.glBindVertexArray(0);
+        // 텍스처 좌표
+        glVertexAttribPointer(1, 2, GL_FLOAT, false, 5 * Float.BYTES, 3 * Float.BYTES);
+        glEnableVertexAttribArray(1);
+        glBindVertexArray(0);
 
         // 셰이더 컴파일 및 링크
         int vertexShader = GL20.glCreateShader(GL20.GL_VERTEX_SHADER);
@@ -111,14 +165,22 @@ public class Main {
         GL20.glDeleteShader(vertexShader);
         GL20.glDeleteShader(fragmentShader);
 
+        int textureID = TextureLoader.loadTexture("textures/dirt.png");
+
         while (!glfwWindowShouldClose(window)) { // 창을 닫지 않으면 계속 실행
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // 화면 초기화
             glClearColor(0.1f, 0.2f, 0.3f, 1.0f); // 배경색 파란색으로 설정
 
-            GL20.glUseProgram(shaderProgram);
-            GL30.glBindVertexArray(vao);
-            GL11.glDrawArrays(GL11.GL_TRIANGLES, 0, 3);
-            GL30.glBindVertexArray(0);
+            glUseProgram(shaderProgram);
+
+            // 텍스처 유니폼 위치 가져오기
+            int uniformLocation = glGetUniformLocation(shaderProgram, "texture1");
+            glUniform1i(uniformLocation, 0); // 텍스처 유니폼에 텍스처 유닛 0 연결
+
+            glBindTexture(GL_TEXTURE_2D, textureID);
+            glBindVertexArray(vao);
+            GL11.glDrawArrays(GL_TRIANGLES, 0, 36);
+            glBindVertexArray(0);
 
             glfwSwapBuffers(window); // 화면 갱신
             glfwPollEvents(); // 키보드, 마우스 등 이벤트 처리
